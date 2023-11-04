@@ -30,7 +30,7 @@ export PROXMOX_PASSWORD=password
 export PROXMOX_USER=user@pam
 
 # generate manifests (available flags: --target-namespace, --kubernetes-version, --control-plane-machine-count, --worker-machine-count)
-clusterctl generate cluster cappx-test --control-plane-machine-count=3 --infrastructure=proxmox:v0.3.1 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
+clusterctl generate cluster cappx-test --control-plane-machine-count=1 --infrastructure=proxmox:v0.3.1 --config https://raw.githubusercontent.com/sp-yduck/cluster-api-provider-proxmox/main/clusterctl.yaml > cappx-test.yaml
 
 # inspect and edit
 vi cappx-test.yaml
@@ -48,6 +48,16 @@ clusterctl get kubeconfig cappx-test > kubeconfig.yaml
 
 # get node command for workload cluster
 kubectl --kubeconfig=kubeconfig.yaml get node
+
+# install cni of your choice´
+# cilium (not working at the moment)
+helm template cilium cilium/cilium --version 1.x.x  --namespace kube-system | kubectl --kubeconfig=kubeconfig.yaml apply -f -
+# calico (not work because wrong podnet)
+kubectl --kubeconfig=kubeconfig.yaml create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/manifests/tigera-operator.yaml
+kubectl --kubeconfig=kubeconfig.yaml create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/manifests/custom-resources.yaml
+# antrea
+kubectl --kubeconfig=kubeconfig.yaml apply -f https://raw.githubusercontent.com/antrea-io/antrea/main/build/yamls/antrea.yml
+
 ```
 
 4. Tear down your workload cluster
